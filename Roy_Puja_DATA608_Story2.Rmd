@@ -1,0 +1,176 @@
+---
+title: "DATA 608: Story#2: Can the FED Control Inflation and Maintain Full Employment"
+author: "Puja Roy"
+date: "2024-02-18"
+output: openintro::lab_report
+---
+
+### Introduction
+
+The Federal Reserve's mandate from Congress is to control inflation and to maintain low unemployment. These seem to be contradictory objectives.
+For this story you will need to source the following data for the last 25 years;
+
+The Consumer Price Index (CPI) (Bureau of Labor Statistics)
+
+The FED Funds Rate (FRED) (Federal Reserve Board)
+
+Unemployment Rate  (Bureau of Labor Statistics)
+
+Your Data Visualizations should be designed to answer the question "Has the FED been able to fulfill the mandate given to it by Congress?"
+
+For Story#2, I obtained the data for Unemployment Rate  (Bureau of Labor Statistics) from the https://www.bls.gov/data/#unemployment website, Consumer Price Index (CPI) (Bureau of Labor Statistics) from the https://www.bls.gov/cpi/data.htm website and downloaded the series data from this link: https://download.bls.gov/pub/time.series/cu/ which incorporates all items. Lastly, I downloaded the FED Funds Rate (FRED) (Federal Reserve Board) data from this website: https://fred.stlouisfed.org/series/FEDFUNDS 
+
+
+### Load R packages
+```{r load-packages, message=FALSE}
+library(tidyverse)
+library(openintro)
+library(ggplot2)
+library(dplyr)
+```
+
+### Retrieve URL of the raw dataset from GitHub & Load the CSV dataset into a data frame
+
+```{r}
+url_one <- "https://raw.githubusercontent.com/pujaroy280/DATA608Story2/main/cu.data.1.AllItems.txt"
+cpi_data <- read.csv(url_one, sep = "\t")
+
+```
+
+```{r}
+url_two <- "https://raw.githubusercontent.com/pujaroy280/DATA608Story2/main/la.data.1.CurrentS.txt"
+bls_data <- read.csv(url_two, sep = "\t")
+```
+
+```{r}
+url_three <- "https://raw.githubusercontent.com/pujaroy280/DATA608Story2/main/FEDFUNDS.csv"
+fed_data <- read.csv(url_three) 
+```
+
+### Clean & Preprocess Data for Data Analysis + Visualization
+Initially, working with the CPI and BLS data were messy so I had to transform the data by removing columns that did not contain useful information. I filtered the data to observe trends over the last 25 years.
+
+```{r}
+# Filter the data to cover the last 25 years
+cpi_data <- cpi_data %>%
+  filter(year >= max(year) - 25)
+
+# Remove the 'period' column
+cpi_data <- cpi_data %>%
+  select(-period)
+
+# Remove the 'footnote_codes' column
+cpi_data <- cpi_data %>%
+  select(-footnote_codes)
+
+# View the cleaned data
+head(cpi_data)
+```
+### Consumer Price Index (CPI) over the last 25 Years
+
+```{r}
+# Remove duplicate values for the same years
+cpi_data <- cpi_data %>%
+  distinct(year, .keep_all = TRUE)
+
+# Plotting
+ggplot(cpi_data, aes(x = year, y = value)) +
+  geom_line() +
+  labs(x = "Year", y = "CPI Value", title = "Consumer Price Index (CPI) Over the Last 25 Years") + geom_point()
+
+```
+
+Over the past 25 years, Consumer Price Index (CPI) have increased. This includes all items including but not limited to US food beverage, housing, apparel, transportation, medical, education, goods & services etc.
+
+```{r}
+# Filter the data to cover the last 25 years
+bls_data <- bls_data %>%
+  filter(year >= max(year) - 25)
+
+# Remove the 'period' column
+bls_data <- bls_data %>%
+  select(-period)
+
+# Remove the 'footnote_codes' column
+bls_data <- bls_data %>%
+  select(-footnote_codes)
+
+# View the cleaned data
+head(bls_data)
+```
+### Unemployment Rate over the last 25 Years
+```{r}
+# Remove duplicate values for the same years
+bls_data <- bls_data %>%
+  distinct(year, .keep_all = TRUE)
+```
+
+```{r}
+# Store bls_data into a new variable to print values in desc order
+bls_data_sorted <- bls_data %>%
+  arrange(desc(value))
+
+# Print the sorted year and value columns
+print(bls_data_sorted[, c("year", "value")])
+```
+
+```{r}
+# Plotting with blue color
+ggplot(bls_data, aes(x = year, y = value)) +
+  geom_line(color = "blue") +
+  geom_point(color = "blue") +
+  labs(x = "Year", y = "Unemployment Rate", title = "Unemployment Rate Over the Last 25 Years")
+
+```
+
+Over the past 25 years, unemployment rates significantly impacted 2010 which led to a recession. From 2020-2023, unemployment rates were stable and low. Similarly, from 2000-2001, 2005-2016, 2014-2021, unemployment rates were stable.
+
+```{r}
+# Convert the 'DATE' column to Date format
+fed_data$DATE <- as.Date(fed_data$DATE)
+
+# Extract the year from the 'DATE' column
+fed_data$year <- year(fed_data$DATE)
+
+# Extract the last 25 years of data
+last_25_years <- fed_data %>%
+  filter(year >= (year(Sys.Date()) - 25))
+
+# Remove duplicate years
+last_25_years <- last_25_years %>%
+  distinct(year, .keep_all = TRUE)
+
+# Remove duplicate values for the same years
+last_25_years<- last_25_years %>%
+  distinct(year, .keep_all = TRUE)
+
+# View the last 25 years of data of FedFunds Data
+head(last_25_years)
+```
+```{r}
+# Store last_25_years  into a new variable to print values in desc order
+fed_data_sorted <- last_25_years %>%
+  arrange(desc(FEDFUNDS))
+
+# Print the sorted year and FEDFUNDS columns
+print(fed_data_sorted[, c("year", "FEDFUNDS")])
+```
+
+### Federal Funds Rate over the last 25 Years
+```{r}
+# Plotting
+ggplot(last_25_years, aes(x = year, y = FEDFUNDS)) +
+  geom_line(color="darkgreen") +
+  geom_point(color="darkgreen") +
+  labs(x = "Year", y = "Federal Funds Rate", title = "Federal Funds Rate Over the Last 25 Years")
+```
+
+Over the past 25 years, Federal Fund rates have increased and decreased steadily. 2001 was the year in which Federal Fund rates increased by 5.98% and was the highest. Currently(2024), Federal Fund rates increased at a rate of 5.45%. The lowest Federal Fund rate was at a rate of 0.07% in 2014. 
+
+### Has the FED been able to fulfill the mandate given to it by Congress?
+
+The FED has not been able to fulfill the mandate given to it by Congress since CPI rates have been increasing over the past 25 years. However, unemployment rates have been decreasing since 2011 and has remained stable since the pandemic. Based on the visualizations, it seems that there are chances of unemployment rates to increase since mass layoffs have been occurring at various and notable companies including Google, Microsoft, Meta (formerly Facebook) and Amazon. Most importantly, FED fund rates have been increasing due to high rates of inflation and low unemployment rates. There is a negative correlation between unemployment, federal fund and CPI rates because when unemployment rates are low, there are higher chances of an increase in consumer expenses. For this reason, inflation will eventually exceed which can raise interest rates.
+
+### Conclusion
+
+Throughout this Story#2, I learned about insights/trends of CPI, unemployment and Fed Fund rates. I conducted research on various economic and financial terms to assist my knowledge in providing alternate details to support my Story#2. While I delved deeper in examining the data sets from the government sources, I learned that identical values for a certain year can tarnish the presentation of the data visualization and analysis. For this assignment, I was initially planning to the fetch the data by using the APIs, but had to change the structure since the request was not allowing me to successfully fetch the data sets through the API.
